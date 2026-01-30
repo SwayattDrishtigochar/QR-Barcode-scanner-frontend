@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     // Keeping your exact filename
-    ENV_SOURCE   = "${WORKSPACE}/../.env-fronted"
+    ENV_SOURCE   = "${WORKSPACE}/../.env-frontend"
     COMPOSE_FILE = 'docker-compose.yml'
 
     // Telegram credentials
