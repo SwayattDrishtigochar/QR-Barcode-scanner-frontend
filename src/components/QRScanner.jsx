@@ -1,11 +1,30 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "./Button";
 import { Input } from "./Input";
 import { Plus, Trash2, X, QrCode } from "lucide-react";
 
-const QRInput = ({ onScan, scannedQRs, setScannedQRs }) => {
+const QRInput = ({
+  onScan,
+  scannedQRs,
+  setScannedQRs,
+  shouldFocus,
+  setShouldFocus,
+}) => {
   const [qrValue, setQrValue] = useState("");
   const [error, setError] = useState("");
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (shouldFocus && inputRef.current) {
+      inputRef.current.focus();
+      // Reset the focus trigger
+      setTimeout(() => {
+        if (typeof shouldFocus === "function") {
+          shouldFocus(false);
+        }
+      }, 50);
+    }
+  }, [shouldFocus]);
 
   const addQRCode = () => {
     const trimmedValue = qrValue.trim();
@@ -53,6 +72,7 @@ const QRInput = ({ onScan, scannedQRs, setScannedQRs }) => {
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Input
+              ref={inputRef}
               placeholder="Enter or scan QR code"
               value={qrValue}
               onChange={(e) => {
@@ -60,6 +80,8 @@ const QRInput = ({ onScan, scannedQRs, setScannedQRs }) => {
                 setError("");
               }}
               onKeyPress={handleKeyPress}
+              // inputMode="none"
+              autoFocus
               className={`pr-10 transition-all ${
                 error
                   ? "border-red-300 focus:border-red-500 focus:ring-red-200"

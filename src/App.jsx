@@ -12,6 +12,7 @@ function App() {
   const [customBinValue, setCustomBinValue] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
+  const [shouldFocusInput, setShouldFocusInput] = useState(false);
   const [stats, setStats] = useState({
     totalQRs: 0,
     smallQRs: 0,
@@ -90,6 +91,7 @@ function App() {
         setBinSize("small");
         setCustomBinValue("");
         setMessage(null);
+        setShouldFocusInput(true);
       }, 2000);
     } catch (error) {
       setMessage({
@@ -231,6 +233,8 @@ function App() {
                 scannedQRs={scannedQRs}
                 setScannedQRs={setScannedQRs}
                 binSize={getBinSizeDisplay()}
+                shouldFocus={shouldFocusInput}
+                setShouldFocus={setShouldFocusInput}
               />
             </div>
 
