@@ -2,15 +2,17 @@ version: '3.8'
 
 services:
   barcode-frontend:
+    container_name: barcode-frontend
     build:
       context: .
       dockerfile: Dockerfile
-      container_name: barcode-frontend
     ports:
       - "3000:3000"
     env_file:
       - .env
     restart: always
+    networks:
+      - app-network
 
 networks:
   app-network:
