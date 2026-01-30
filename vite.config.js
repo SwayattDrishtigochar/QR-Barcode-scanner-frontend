@@ -10,7 +10,7 @@ export default defineConfig({
   },
   preview: {
     host: true,
-    allowedHosts: 'all',
+    allowedHosts: ['bin.swayatt.com'],
     port: 3000,
   },
 })
