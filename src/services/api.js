@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_SERVER_URL + '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -25,10 +25,20 @@ export const scanService = {
   },
 
   // Get all scan batches
-  getScanBatches: async () => {
+  getAllScans: async () => {
     try {
       const response = await api.get('/scans');
-      return response.data;
+      return response.data.data || [];
+    } catch (error) {
+      throw error.response?.data || { message: 'Network error' };
+    }
+  },
+
+  // Get scan statistics
+  getScanStats: async () => {
+    try {
+      const response = await api.get('/scans/stats');
+      return response.data.data;
     } catch (error) {
       throw error.response?.data || { message: 'Network error' };
     }
