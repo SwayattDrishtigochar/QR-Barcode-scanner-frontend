@@ -5,8 +5,10 @@ import { Select, SelectItem } from "./components/Select";
 import { Input } from "./components/Input";
 import { scanService } from "./services/api";
 import { Trash2, Package, CheckCircle, AlertCircle, Save } from "lucide-react";
+import { isAuthenticated, promptForCredentials } from "./utils/auth";
 
 function App() {
+  const [isAuth, setIsAuth] = useState(false);
   const [scannedQRs, setScannedQRs] = useState([]);
   const [binSize, setBinSize] = useState("small");
   const [customBinValue, setCustomBinValue] = useState("");
@@ -18,19 +20,39 @@ function App() {
     smallQRs: 0,
     mediumQRs: 0,
     largeQRs: 0,
-    customQRs: 0
+    customQRs: 0,
   });
 
+  // Check authentication on mount
   useEffect(() => {
-    loadStats();
+    const checkAuth = () => {
+      if (isAuthenticated()) {
+        setIsAuth(true);
+      } else {
+        const authenticated = promptForCredentials();
+        setIsAuth(authenticated);
+        if (!authenticated) {
+          // If authentication failed, ask again after a delay
+          setTimeout(checkAuth, 2000);
+        }
+      }
+    };
+
+    checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (isAuth) {
+      loadStats();
+    }
+  }, [isAuth]);
 
   const loadStats = async () => {
     try {
       const statsData = await scanService.getScanStats();
       setStats(statsData);
     } catch (error) {
-      console.error('Failed to load stats:', error);
+      console.error("Failed to load stats:", error);
     }
   };
 
@@ -105,11 +127,27 @@ function App() {
   };
 
   const getBinSizeDisplay = () => {
-    if (binSize === 'custom') {
-      return customBinValue || 'Custom';
+    if (binSize === "custom") {
+      return customBinValue || "Custom";
     }
     return binSize.charAt(0).toUpperCase() + binSize.slice(1);
   };
+
+  // Show loading/auth screen if not authenticated
+  if (!isAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center max-w-md w-full">
+          <div className="bg-blue-100 rounded-full p-4 inline-block mb-4">
+            <Package className="h-12 w-12 text-blue-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">QR Scanner</h1>
+          <p className="text-slate-600 mb-4">Authentication Required</p>
+          {/* <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div> */}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-4 sm:py-8 px-3 sm:px-4">
@@ -117,23 +155,33 @@ function App() {
         {/* Stats Section */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
           <div className="bg-white rounded-lg border border-slate-200 p-3 text-center shadow-sm">
-            <div className="text-xl font-bold text-primary">{stats.totalQRs}</div>
+            <div className="text-xl font-bold text-primary">
+              {stats.totalQRs}
+            </div>
             <div className="text-xs text-slate-600">Total QRs</div>
           </div>
           <div className="bg-white rounded-lg border border-slate-200 p-3 text-center shadow-sm">
-            <div className="text-xl font-bold text-green-600">{stats.smallQRs}</div>
+            <div className="text-xl font-bold text-green-600">
+              {stats.smallQRs}
+            </div>
             <div className="text-xs text-slate-600">Small</div>
           </div>
           <div className="bg-white rounded-lg border border-slate-200 p-3 text-center shadow-sm">
-            <div className="text-xl font-bold text-blue-600">{stats.mediumQRs}</div>
+            <div className="text-xl font-bold text-blue-600">
+              {stats.mediumQRs}
+            </div>
             <div className="text-xs text-slate-600">Medium</div>
           </div>
           <div className="bg-white rounded-lg border border-slate-200 p-3 text-center shadow-sm">
-            <div className="text-xl font-bold text-purple-600">{stats.largeQRs}</div>
+            <div className="text-xl font-bold text-purple-600">
+              {stats.largeQRs}
+            </div>
             <div className="text-xs text-slate-600">Large</div>
           </div>
           <div className="bg-white rounded-lg border border-slate-200 p-3 text-center shadow-sm">
-            <div className="text-xl font-bold text-orange-600">{stats.customQRs}</div>
+            <div className="text-xl font-bold text-orange-600">
+              {stats.customQRs}
+            </div>
             <div className="text-xs text-slate-600">Custom</div>
           </div>
         </div>
@@ -216,7 +264,9 @@ function App() {
               <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-semibold text-primary">2</span>
+                    <span className="text-xs font-semibold text-primary">
+                      2
+                    </span>
                   </div>
                   <h2 className="text-lg sm:text-xl font-semibold text-slate-900">
                     Scan QR Codes for {getBinSizeDisplay()} Bin
@@ -256,7 +306,11 @@ function App() {
             <div className="pt-2">
               <Button
                 onClick={handleSubmit}
-                disabled={isSubmitting || scannedQRs.length === 0 || (binSize === 'custom' && !customBinValue.trim())}
+                disabled={
+                  isSubmitting ||
+                  scannedQRs.length === 0 ||
+                  (binSize === "custom" && !customBinValue.trim())
+                }
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:bg-slate-300 disabled:text-slate-500 shadow-md hover:shadow-lg transition-all duration-200"
                 size="lg"
               >
