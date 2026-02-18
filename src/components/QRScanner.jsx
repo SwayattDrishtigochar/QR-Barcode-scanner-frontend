@@ -80,8 +80,9 @@ const QRInput = ({
                 setError("");
               }}
               onKeyPress={handleKeyPress}
-              // inputMode="none"
+              inputMode="numeric"
               autoFocus
+              maxLength={8}
               className={`pr-10 transition-all ${
                 error
                   ? "border-red-300 focus:border-red-500 focus:ring-red-200"
