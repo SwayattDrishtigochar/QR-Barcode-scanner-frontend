@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import QRInput from "./components/QRScanner";
 import { Button } from "./components/Button";
-import { Select, SelectItem } from "./components/Select";
 import { Input } from "./components/Input";
+import { Select, SelectItem } from "./components/Select";
 import { scanService } from "./services/api";
 import { Trash2, Package, CheckCircle, AlertCircle, Save } from "lucide-react";
 import { isAuthenticated, promptForCredentials } from "./utils/auth";
@@ -11,18 +11,17 @@ function App() {
   const [isAuth, setIsAuth] = useState(false);
   const [scannedQRs, setScannedQRs] = useState([]);
   const [binSize, setBinSize] = useState("small");
+  const [isCustom, setIsCustom] = useState(false);
   const [customBinValue, setCustomBinValue] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
   const [shouldFocusInput, setShouldFocusInput] = useState(false);
+  const [binSizes, setBinSizes] = useState([]);
   const [stats, setStats] = useState({
-    totalQRs: 0,
-    smallQRs: 0,
-    mediumQRs: 0,
-    largeQRs: 0,
-    customQRs: 0,
+    stats: [],
+    totalQRCodes: 0,
+    totalBinSizes: 0,
   });
-
   // Check authentication on mount
   useEffect(() => {
     const checkAuth = () => {
@@ -44,6 +43,7 @@ function App() {
   useEffect(() => {
     if (isAuth) {
       loadStats();
+      loadBinSizes();
     }
   }, [isAuth]);
 
@@ -53,6 +53,15 @@ function App() {
       setStats(statsData);
     } catch (error) {
       console.error("Failed to load stats:", error);
+    }
+  };
+
+  const loadBinSizes = async () => {
+    try {
+      const binSizesData = await scanService.getDistinctBinSizes();
+      setBinSizes(binSizesData.binSizes || []);
+    } catch (error) {
+      console.error("Failed to load bin sizes:", error);
     }
   };
 
@@ -73,6 +82,24 @@ function App() {
     setTimeout(() => setMessage(null), 2000);
   };
 
+  const handleBinSizeChange = (value) => {
+    if (value === "custom") {
+      setIsCustom(true);
+      setBinSize("");
+      setCustomBinValue("");
+    } else {
+      setBinSize(value);
+      setIsCustom(false);
+      setCustomBinValue("");
+    }
+  };
+
+  const handleCustomBinChange = (e) => {
+    const value = e.target.value;
+    setCustomBinValue(value);
+    setBinSize(value);
+  };
+
   const handleSubmit = async () => {
     if (scannedQRs.length === 0) {
       setMessage({
@@ -83,10 +110,10 @@ function App() {
       return;
     }
 
-    if (binSize === "custom" && !customBinValue.trim()) {
+    if (!binSize.trim()) {
       setMessage({
         type: "error",
-        text: "Please enter a custom bin value",
+        text: "Please enter a bin size",
       });
       setTimeout(() => setMessage(null), 3000);
       return;
@@ -95,26 +122,24 @@ function App() {
     setIsSubmitting(true);
 
     try {
-      await scanService.submitScanBatch(
-        scannedQRs,
-        binSize,
-        binSize === "custom" ? customBinValue : null,
-      );
+      await scanService.submitScanBatch(scannedQRs, binSize);
 
       setMessage({
         type: "success",
-        text: `Successfully saved ${scannedQRs.length} QR code${scannedQRs.length > 1 ? "s" : ""} with ${binSize} bin`,
+        text: `Successfully saved ${scannedQRs.length} QR code${scannedQRs.length > 1 ? "s" : ""} to ${binSize} bin`,
       });
 
       await loadStats();
+      await loadBinSizes();
 
       setTimeout(() => {
         setScannedQRs([]);
         setBinSize("small");
+        setIsCustom(false);
         setCustomBinValue("");
         setMessage(null);
         setShouldFocusInput(true);
-      }, 2000);
+      }, 1000);
     } catch (error) {
       setMessage({
         type: "error",
@@ -127,10 +152,7 @@ function App() {
   };
 
   const getBinSizeDisplay = () => {
-    if (binSize === "custom") {
-      return customBinValue || "Custom";
-    }
-    return binSize.charAt(0).toUpperCase() + binSize.slice(1);
+    return binSize || "Bin";
   };
 
   // Show loading/auth screen if not authenticated
@@ -153,37 +175,35 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-4 sm:py-8 px-3 sm:px-4">
       <div className="max-w-2xl mx-auto">
         {/* Stats Section */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-          <div className="bg-white rounded-lg border border-slate-200 p-3 text-center shadow-sm">
-            <div className="text-xl font-bold text-primary">
-              {stats.totalQRs}
+        <div className="mb-6">
+          <div className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm mb-3">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary">
+                {stats.totalQRCodes}
+              </div>
+              <div className="text-sm text-slate-600 mt-1">Total QR Codes</div>
             </div>
-            <div className="text-xs text-slate-600">Total QRs</div>
           </div>
-          <div className="bg-white rounded-lg border border-slate-200 p-3 text-center shadow-sm">
-            <div className="text-xl font-bold text-green-600">
-              {stats.smallQRs}
+          {stats.stats && stats.stats.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {stats.stats.map((stat, index) => (
+                <div
+                  key={stat.binSize}
+                  className="bg-white rounded-lg border border-slate-200 p-3 text-center shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="text-xl font-bold text-blue-600">
+                    {stat.count}
+                  </div>
+                  <div
+                    className="text-xs text-slate-600 truncate"
+                    title={stat.binSize}
+                  >
+                    {stat.binSize}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="text-xs text-slate-600">Small</div>
-          </div>
-          <div className="bg-white rounded-lg border border-slate-200 p-3 text-center shadow-sm">
-            <div className="text-xl font-bold text-blue-600">
-              {stats.mediumQRs}
-            </div>
-            <div className="text-xs text-slate-600">Medium</div>
-          </div>
-          <div className="bg-white rounded-lg border border-slate-200 p-3 text-center shadow-sm">
-            <div className="text-xl font-bold text-purple-600">
-              {stats.largeQRs}
-            </div>
-            <div className="text-xs text-slate-600">Large</div>
-          </div>
-          <div className="bg-white rounded-lg border border-slate-200 p-3 text-center shadow-sm">
-            <div className="text-xl font-bold text-orange-600">
-              {stats.customQRs}
-            </div>
-            <div className="text-xs text-slate-600">Custom</div>
-          </div>
+          )}
         </div>
 
         {/* Main Card */}
@@ -236,20 +256,48 @@ function App() {
                 </h2>
               </div>
               <div className="space-y-3 sm:space-y-4">
-                <Select value={binSize} onValueChange={setBinSize}>
+                <Select
+                  value={isCustom ? "custom" : binSize}
+                  onValueChange={handleBinSizeChange}
+                >
+                  {/* Standard bin sizes - always show these */}
                   <SelectItem value="small">Small Bin</SelectItem>
                   <SelectItem value="medium">Medium Bin</SelectItem>
                   <SelectItem value="large">Large Bin</SelectItem>
+
+                  {/* Previously used custom bin values */}
+                  {binSizes.length > 0 && (
+                    <>
+                      {binSizes
+                        .filter(
+                          (value) =>
+                            !["small", "large", "medium"].includes(
+                              value.toLowerCase(),
+                            ),
+                        )
+                        .map((customValue, index) => (
+                          <SelectItem
+                            key={`custom-${index}`}
+                            value={customValue}
+                            className="font-bold capitalize"
+                          >
+                            {customValue}
+                          </SelectItem>
+                        ))}
+                    </>
+                  )}
+                  {/* Custom option */}
                   <SelectItem value="custom">Custom Size</SelectItem>
                 </Select>
 
-                {binSize === "custom" && (
+                {isCustom && (
                   <div className="animate-slide-up">
                     <Input
                       placeholder="Enter custom bin size..."
                       value={customBinValue}
-                      onChange={(e) => setCustomBinValue(e.target.value)}
+                      onChange={handleCustomBinChange}
                       className="w-full"
+                      autoFocus
                     />
                   </div>
                 )}
@@ -307,9 +355,7 @@ function App() {
               <Button
                 onClick={handleSubmit}
                 disabled={
-                  isSubmitting ||
-                  scannedQRs.length === 0 ||
-                  (binSize === "custom" && !customBinValue.trim())
+                  isSubmitting || scannedQRs.length === 0 || !binSize.trim()
                 }
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:bg-slate-300 disabled:text-slate-500 shadow-md hover:shadow-lg transition-all duration-200"
                 size="lg"
