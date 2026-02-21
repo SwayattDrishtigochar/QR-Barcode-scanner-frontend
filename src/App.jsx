@@ -6,6 +6,7 @@ import { Select, SelectItem } from "./components/Select";
 import { scanService } from "./services/api";
 import { Trash2, Package, CheckCircle, AlertCircle, Save } from "lucide-react";
 import { isAuthenticated, promptForCredentials } from "./utils/auth";
+import AuthModal from "./AuthModal";
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
@@ -24,20 +25,9 @@ function App() {
   });
   // Check authentication on mount
   useEffect(() => {
-    const checkAuth = () => {
-      if (isAuthenticated()) {
-        setIsAuth(true);
-      } else {
-        const authenticated = promptForCredentials();
-        setIsAuth(authenticated);
-        if (!authenticated) {
-          // If authentication failed, ask again after a delay
-          setTimeout(checkAuth, 2000);
-        }
-      }
-    };
-
-    checkAuth();
+    if (isAuthenticated()) {
+      setIsAuth(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -154,22 +144,15 @@ function App() {
   const getBinSizeDisplay = () => {
     return binSize || "Bin";
   };
-
   // Show loading/auth screen if not authenticated
   if (!isAuth) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center max-w-md w-full">
-          <div className="bg-blue-100 rounded-full p-4 inline-block mb-4">
-            <Package className="h-12 w-12 text-blue-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">
-            Bin Scanner
-          </h1>
-          <p className="text-slate-600 mb-4">Authentication Required</p>
-          {/* <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div> */}
+      <>
+        <AuthModal onSuccess={() => setIsAuth(true)} />
+        <div className="min-h-screen flex items-center justify-center bg-slate-100">
+          <p className="text-slate-600">Waiting for authentication…</p>
         </div>
-      </div>
+      </>
     );
   }
 
