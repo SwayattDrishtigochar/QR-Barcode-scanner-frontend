@@ -68,7 +68,7 @@ function App() {
   const handleQRInput = (qrArray) => {
     setMessage({
       type: "success",
-      text: `Added ${qrArray.length} QR code${qrArray.length > 1 ? "s" : ""}`,
+      text: `Added ${qrArray.length} Bin${qrArray.length > 1 ? "s" : ""}`,
     });
     setTimeout(() => setMessage(null), 3000);
   };
@@ -163,7 +163,9 @@ function App() {
           <div className="bg-blue-100 rounded-full p-4 inline-block mb-4">
             <Package className="h-12 w-12 text-blue-600" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">QR Scanner</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">
+            Bin Scanner
+          </h1>
           <p className="text-slate-600 mb-4">Authentication Required</p>
           {/* <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div> */}
         </div>
@@ -179,9 +181,9 @@ function App() {
           <div className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm mb-3">
             <div className="text-center">
               <div className="text-3xl font-bold text-primary">
-                {stats.totalQRCodes}
+                {stats.totalQRCodes || 0}
               </div>
-              <div className="text-sm text-slate-600 mt-1">Total QR Codes</div>
+              <div className="text-sm text-slate-600 mt-1">Total Bins</div>
             </div>
           </div>
           {stats.stats && stats.stats.length > 0 && (
@@ -215,10 +217,10 @@ function App() {
                 <Package className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                QR Scanner
+                Bin Scanner
               </h1>
               <p className="text-blue-100 text-sm sm:text-base">
-                Select bin size first, then scan QR codes
+                Select bin size first, then scan it.
               </p>
             </div>
           </div>
@@ -317,7 +319,10 @@ function App() {
                     </span>
                   </div>
                   <h2 className="text-lg sm:text-xl font-semibold text-slate-900">
-                    Scan QR Codes for {getBinSizeDisplay()} Bin
+                    Scan Bin of{" "}
+                    {getBinSizeDisplay().charAt(0).toUpperCase() +
+                      getBinSizeDisplay().slice(1)}{" "}
+                    Size
                   </h2>
                 </div>
                 {scannedQRs.length > 0 && (
@@ -345,7 +350,7 @@ function App() {
                   className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Clear All QR Codes
+                  Clear All Bins
                 </Button>
               </div>
             )}
@@ -369,7 +374,7 @@ function App() {
                   <>
                     <Save className="h-4 w-4 mr-2" />
                     Save {scannedQRs.length > 0 ? `${scannedQRs.length} ` : ""}
-                    QR Code{scannedQRs.length !== 1 ? "s" : ""}
+                    Bin{scannedQRs.length !== 1 ? "s" : ""}
                   </>
                 )}
               </Button>
@@ -378,7 +383,7 @@ function App() {
             {/* Helper Text */}
             {scannedQRs.length === 0 && (
               <p className="text-xs sm:text-sm text-center text-slate-500 pt-2">
-                Select bin size above, then scan QR codes
+                Select bin size above, then scan it.
               </p>
             )}
           </div>
@@ -386,7 +391,7 @@ function App() {
 
         {/* Footer Info */}
         <p className="text-center text-xs sm:text-sm text-slate-600 mt-4 sm:mt-6 px-4">
-          Step 1: Choose bin size • Step 2: Scan QR codes • Step 3: Save batch
+          Step 1: Choose bin size • Step 2: Scan it • Step 3: Save batch
         </p>
       </div>
     </div>

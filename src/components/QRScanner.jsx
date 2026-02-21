@@ -73,7 +73,7 @@ const QRInput = ({
           <div className="relative flex-1">
             <Input
               ref={inputRef}
-              placeholder="Enter or scan QR code"
+              placeholder="Enter or scan Bin"
               value={qrValue}
               onChange={(e) => {
                 setQrValue(e.target.value);
@@ -121,7 +121,7 @@ const QRInput = ({
         {!error && scannedQRs.length === 0 && (
           <p className="text-xs sm:text-sm text-slate-500 flex items-center gap-1.5">
             <QrCode className="h-3.5 w-3.5" />
-            Type a QR code value and press Enter or click Add
+            Press Enter or Click Add
           </p>
         )}
       </div>
@@ -164,10 +164,7 @@ const QRInput = ({
         <div className="text-center py-8 sm:py-12 px-4 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
           <QrCode className="h-10 w-10 sm:h-12 sm:w-12 text-slate-300 mx-auto mb-3" />
           <p className="text-sm sm:text-base text-slate-500 font-medium">
-            No QR codes added yet
-          </p>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Start by entering a QR code above
+            No Bin added yet
           </p>
         </div>
       )}
