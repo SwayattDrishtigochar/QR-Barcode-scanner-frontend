@@ -272,7 +272,9 @@ function App() {
                     </>
                   )}
                   {/* Custom option */}
-                  <SelectItem value="custom">Custom Size</SelectItem>
+                  <div>
+                    <SelectItem value="custom">📦Custom Size</SelectItem>
+                  </div>
                 </Select>
 
                 {isCustom && (
