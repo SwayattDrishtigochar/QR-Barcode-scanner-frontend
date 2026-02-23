@@ -8,10 +8,14 @@ import { Trash2, Package, CheckCircle, AlertCircle, Save } from "lucide-react";
 import { isAuthenticated, promptForCredentials } from "./utils/auth";
 import AuthModal from "./AuthModal";
 
+const BIN_SIZE_KEY = "selectedBinSize";
+
 function App() {
   const [isAuth, setIsAuth] = useState(false);
   const [scannedQRs, setScannedQRs] = useState([]);
-  const [binSize, setBinSize] = useState("small");
+  const [binSize, setBinSize] = useState(() => {
+    return localStorage.getItem(BIN_SIZE_KEY) || "small";
+  });
   const [isCustom, setIsCustom] = useState(false);
   const [customBinValue, setCustomBinValue] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,12 +27,6 @@ function App() {
     totalQRCodes: 0,
     totalBinSizes: 0,
   });
-  // Check authentication on mount
-  useEffect(() => {
-    if (isAuthenticated()) {
-      setIsAuth(true);
-    }
-  }, []);
 
   useEffect(() => {
     if (isAuth) {
@@ -77,10 +75,12 @@ function App() {
       setIsCustom(true);
       setBinSize("");
       setCustomBinValue("");
+      localStorage.removeItem(BIN_SIZE_KEY);
     } else {
       setBinSize(value);
       setIsCustom(false);
       setCustomBinValue("");
+      localStorage.setItem(BIN_SIZE_KEY, value);
     }
   };
 
@@ -88,6 +88,7 @@ function App() {
     const value = e.target.value;
     setCustomBinValue(value);
     setBinSize(value);
+    localStorage.setItem(BIN_SIZE_KEY, value);
   };
 
   const handleSubmit = async () => {
@@ -124,9 +125,6 @@ function App() {
 
       setTimeout(() => {
         setScannedQRs([]);
-        setBinSize("small");
-        setIsCustom(false);
-        setCustomBinValue("");
         setMessage(null);
         setShouldFocusInput(true);
       }, 1000);
@@ -144,6 +142,22 @@ function App() {
   const getBinSizeDisplay = () => {
     return binSize || "Bin";
   };
+  useEffect(() => {
+    if (isAuthenticated()) {
+      setIsAuth(true);
+    }
+    const savedBinSize = localStorage.getItem(BIN_SIZE_KEY);
+
+    if (savedBinSize) {
+      setBinSize(savedBinSize);
+
+      // If it's not a predefined size, treat it as custom
+      if (!["small", "medium", "large"].includes(savedBinSize.toLowerCase())) {
+        setIsCustom(true);
+        setCustomBinValue(savedBinSize);
+      }
+    }
+  }, []);
   // Show loading/auth screen if not authenticated
   if (!isAuth) {
     return (
