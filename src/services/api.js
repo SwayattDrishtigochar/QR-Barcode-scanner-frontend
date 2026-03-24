@@ -52,6 +52,28 @@ export const scanService = {
       throw error.response?.data || { message: "Network error" };
     }
   },
+
+  // Get latest 10 scan batches
+  getRecentScans: async () => {
+    try {
+      const response = await api.get("/scans/recent");
+      return response.data.data || [];
+    } catch (error) {
+      throw error.response?.data || { message: "Network error" };
+    }
+  },
+
+  // Delete RFID from a scan batch by batch id
+  deleteScanById: async (id, rfid) => {
+    try {
+      const response = await api.delete(`/scans/${id}`, {
+        data: { rfid },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Network error" };
+    }
+  },
 };
 
 export default api;
