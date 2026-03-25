@@ -6,6 +6,7 @@ import { Select, SelectItem } from "./components/Select";
 import { scanService } from "./services/api";
 import {
   Trash2,
+  Pencil,
   Package,
   CheckCircle,
   AlertCircle,
@@ -15,6 +16,7 @@ import {
 import { isAuthenticated, promptForCredentials } from "./utils/auth";
 import AuthModal from "./AuthModal";
 import DeleteBinDialog from "./components/DeleteBinDialog";
+import EditBinDialog from "./components/EditBinDialog";
 
 const BIN_SIZE_KEY = "selectedBinSize";
 
@@ -39,6 +41,8 @@ function App() {
   const [isLoadingRecent, setIsLoadingRecent] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editTarget, setEditTarget] = useState(null);
 
   useEffect(() => {
     if (isAuth) {
@@ -138,6 +142,64 @@ function App() {
     );
 
     setDeleteTarget(null);
+  };
+
+  const openEditDialog = (scan) => {
+    setEditTarget({
+      scanId: scan._id,
+      qrCode: scan.qrCode,
+      currentBinSize: scan.binSize,
+      rfidLabel: scan.scannedRfid,
+      editingKey: scan._id + scan.qrCode,
+    });
+  };
+
+  const closeEditDialog = () => {
+    if (editingId) return;
+    setEditTarget(null);
+  };
+
+  const confirmEditBinSize = async (newBinSize) => {
+    if (!editTarget) return;
+
+    if (!newBinSize || !newBinSize.trim()) {
+      setMessage({
+        type: "error",
+        text: "Please enter a bin size",
+      });
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
+    const normalizedBinSize = newBinSize.trim();
+
+    setEditingId(editTarget.editingKey);
+    try {
+      await scanService.updateScanBinSize(
+        editTarget.scanId,
+        editTarget.qrCode,
+        normalizedBinSize,
+      );
+
+      setMessage({
+        type: "success",
+        text: `Updated bin size to ${normalizedBinSize}`,
+      });
+      setTimeout(() => setMessage(null), 2500);
+
+      await loadRecentScans();
+      await loadStats();
+      await loadBinSizes();
+      setEditTarget(null);
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error.message || "Failed to update bin size",
+      });
+      setTimeout(() => setMessage(null), 3500);
+    } finally {
+      setEditingId(null);
+    }
   };
 
   const handleQRInput = (qrArray) => {
@@ -268,6 +330,16 @@ function App() {
         )}
         onCancel={closeDeleteDialog}
         onConfirm={confirmDeleteFromDialog}
+      />
+
+      <EditBinDialog
+        open={Boolean(editTarget)}
+        scanLabel={editTarget?.rfidLabel || ""}
+        initialBinSize={editTarget?.currentBinSize || ""}
+        binSizeOptions={binSizes}
+        isSaving={Boolean(editTarget && editingId === editTarget.editingKey)}
+        onCancel={closeEditDialog}
+        onConfirm={confirmEditBinSize}
       />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-4 sm:py-8 px-3 sm:px-4">
@@ -522,20 +594,37 @@ function App() {
                           </div>
                         </div>
 
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          disabled={deletingId === scan._id + scan.qrCode}
-                          onClick={() => openDeleteDialog(scan)}
-                          className="text-slate-500 hover:text-red-600 hover:bg-red-50"
-                          aria-label={`Delete ${scan.scannedRfid}`}
-                        >
-                          {deletingId === scan._id + scan.qrCode ? (
-                            <div className="h-4 w-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={editingId === scan._id + scan.qrCode}
+                            onClick={() => openEditDialog(scan)}
+                            className="text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                            aria-label={`Edit ${scan.scannedRfid}`}
+                          >
+                            {editingId === scan._id + scan.qrCode ? (
+                              <div className="h-4 w-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <Pencil className="h-4 w-4" />
+                            )}
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={deletingId === scan._id + scan.qrCode}
+                            onClick={() => openDeleteDialog(scan)}
+                            className="text-slate-500 hover:text-red-600 hover:bg-red-50"
+                            aria-label={`Delete ${scan.scannedRfid}`}
+                          >
+                            {deletingId === scan._id + scan.qrCode ? (
+                              <div className="h-4 w-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

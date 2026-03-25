@@ -74,6 +74,19 @@ export const scanService = {
       throw error.response?.data || { message: "Network error" };
     }
   },
+
+  // Update bin size for one RFID entry
+  updateScanBinSize: async (id, qrCode, binSize) => {
+    try {
+      const response = await api.put(`/scans/${id}`, {
+        qrCode,
+        binSize,
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Network error" };
+    }
+  },
 };
 
 export default api;
