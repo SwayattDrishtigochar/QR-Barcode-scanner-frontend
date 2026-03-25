@@ -322,6 +322,17 @@ function App() {
 
   return (
     <>
+      {isSubmitting && (
+        <div className="fixed inset-0 z-70 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px]">
+          <div className="rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-2xl">
+            <div className="flex items-center gap-3 text-slate-800">
+              <div className="h-5 w-5 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+              <span className="text-sm font-medium">Saving to backend...</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <DeleteBinDialog
         open={Boolean(deleteTarget)}
         scanLabel={deleteTarget?.rfidLabel || ""}

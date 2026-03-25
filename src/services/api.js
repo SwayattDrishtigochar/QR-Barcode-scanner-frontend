@@ -11,10 +11,10 @@ const api = axios.create({
 
 export const scanService = {
   // Submit scan batch to backend
-  submitScanBatch: async (qrCodes, binSize) => {
+  submitScanBatch: async (rfids, binSize) => {
     try {
-      const response = await api.post("/scans", {
-        qrCodes,
+      const response = await api.post("/bin-scans", {
+        rfids,
         binSize,
       });
       return response.data;
@@ -26,7 +26,7 @@ export const scanService = {
   // Get all scan batches
   getAllScans: async () => {
     try {
-      const response = await api.get("/scans");
+      const response = await api.get("/bin-scans");
       return response.data.data || [];
     } catch (error) {
       throw error.response?.data || { message: "Network error" };
@@ -36,7 +36,7 @@ export const scanService = {
   // Get scan statistics
   getScanStats: async () => {
     try {
-      const response = await api.get("/scans/stats");
+      const response = await api.get("/bin-scans/stats");
       return response.data.data;
     } catch (error) {
       throw error.response?.data || { message: "Network error" };
@@ -46,7 +46,7 @@ export const scanService = {
   // Get distinct bin sizes
   getDistinctBinSizes: async () => {
     try {
-      const response = await api.get("/scans/bin-sizes");
+      const response = await api.get("/bin-scans/bin-sizes");
       return response.data.data;
     } catch (error) {
       throw error.response?.data || { message: "Network error" };
@@ -56,7 +56,7 @@ export const scanService = {
   // Get all scan batches (newest first)
   getRecentScans: async () => {
     try {
-      const response = await api.get("/scans/recent");
+      const response = await api.get("/bin-scans/recent");
       return response.data.data || [];
     } catch (error) {
       throw error.response?.data || { message: "Network error" };
@@ -66,7 +66,7 @@ export const scanService = {
   // Delete RFID from a scan batch by batch id
   deleteScanById: async (id, rfid) => {
     try {
-      const response = await api.delete(`/scans/${id}`, {
+      const response = await api.delete(`/bin-scans/${id}`, {
         data: { rfid },
       });
       return response.data;
@@ -78,8 +78,8 @@ export const scanService = {
   // Update bin size for one RFID entry
   updateScanBinSize: async (id, qrCode, binSize) => {
     try {
-      const response = await api.put(`/scans/${id}`, {
-        qrCode,
+      const response = await api.put(`/bin-scans/${id}`, {
+        rfid: qrCode,
         binSize,
       });
       return response.data;
