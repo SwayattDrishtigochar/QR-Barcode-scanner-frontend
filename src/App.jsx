@@ -557,11 +557,11 @@ function App() {
                   <div className="flex items-center gap-2">
                     <Clock3 className="h-4 w-4 text-blue-600" />
                     <h2 className="text-sm sm:text-base font-semibold text-slate-900">
-                      Last 10 Scanned Bins
+                      All Scanned Bins
                     </h2>
                   </div>
                   <span className="text-xs text-slate-500">
-                    {recentScans.length}/10
+                    {recentScans.length}
                   </span>
                 </div>
 

@@ -53,7 +53,7 @@ export const scanService = {
     }
   },
 
-  // Get latest 10 scan batches
+  // Get all scan batches (newest first)
   getRecentScans: async () => {
     try {
       const response = await api.get("/scans/recent");
